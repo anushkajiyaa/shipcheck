@@ -1,6 +1,6 @@
 # ShipCheck
 
-**Should we ship this A/B test?** ShipCheck checks whether an experiment's results can be trusted, then makes a ship / don't ship / keep running call and writes a decision memo for stakeholders.
+**Should we ship this A/B test?** ShipCheck checks whether an experiment's results can be trusted, then makes a ship / don't ship / keep running call and explains why.
 
 ## The problem
 
@@ -23,7 +23,7 @@ ShipCheck runs four checks in a fixed order. The first one that fails decides th
 
 ## Design decisions
 
-- **The statistics decide; AI only writes.** The decision comes from fixed rules that can be tested and explained. The optional AI memo gets the computed numbers, is told the decision is final, and is rejected automatically if its heading states a different decision. Without an API key, a template memo is used, so the tool works fully offline.
+- **Fixed rules make the decision.** Every decision comes from rules that can be tested and explained, not from a model's judgement.
 - **Check the split first.** A broken split makes every other number unreliable, so nothing else is trusted until it passes. The threshold is strict (p < 0.001) so real tests aren't flagged by chance.
 - **Guardrails can veto a win.** This makes ShipCheck cautious: with two guardrails, chance alone sometimes flags harm that isn't there. The evaluation shows this cost (a few real wins blocked) and I accepted it, because shipping real harm is worse than delaying a real win.
 - **"Not significant" isn't treated as "no effect".** The power check is what separates *keep running* from *don't ship*.
@@ -54,8 +54,6 @@ streamlit run app.py          # the app
 python evaluate.py            # the evaluation
 python -m pytest -q           # the tests
 ```
-
-To turn on the AI memo, set `ANTHROPIC_API_KEY` (and optionally `SHIPCHECK_MODEL`). On Streamlit Community Cloud, add it under the app's **Secrets**.
 
 **Your own data:** upload a CSV with one row per user, a column saying which variant they saw, and numeric metric columns (0/1 for yes/no metrics). `sample_data/` has one example file for each scenario.
 

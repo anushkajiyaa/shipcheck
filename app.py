@@ -4,13 +4,11 @@ import pandas as pd
 import streamlit as st
 
 from shipcheck import Config, Decision, Guardrail, analyse
-from shipcheck.memo import ai_memo, template_memo
 from shipcheck.simulate import DESCRIPTIONS, SCENARIOS, make_experiment
 
 st.set_page_config(page_title="ShipCheck", layout="wide")
 st.title("ShipCheck")
-st.caption("Checks whether an A/B test can be trusted, then says whether to ship it. "
-           "The statistics make the decision; AI only writes the memo.")
+st.caption("Checks whether an A/B test can be trusted, then says whether to ship it.")
 
 COLOURS = {Decision.SHIP: "green", Decision.DONT_SHIP: "red",
            Decision.KEEP_RUNNING: "orange", Decision.INVALID: "violet"}
@@ -23,14 +21,12 @@ with st.sidebar:
         scenario = st.selectbox("Sample", list(SCENARIOS), format_func=lambda s: s.replace("_", " "))
         st.caption(DESCRIPTIONS[scenario])
         df = make_experiment(scenario, seed=42)
-        test_name = f"Sample: {scenario.replace('_', ' ')}"
     else:
         up = st.file_uploader("One row per user, with a variant column and metric columns", type="csv")
         if up is None:
             st.info("Upload a CSV, or switch to a sample test.")
             st.stop()
         df = pd.read_csv(up)
-        test_name = st.text_input("Test name", up.name.rsplit(".", 1)[0])
 
 cols = list(df.columns)
 numeric = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
@@ -103,20 +99,6 @@ def row(m, role):
 st.subheader("Results")
 st.dataframe(pd.DataFrame([row(r.primary, "Primary")] + [row(g, "Guardrail") for g in r.guardrails]),
              hide_index=True, width="stretch")
-
-# ---------- Memo ----------
-st.subheader("Decision memo")
-use_ai = st.toggle("Write the memo with AI (needs ANTHROPIC_API_KEY)", False)
-memo = None
-if use_ai:
-    with st.spinner("Writing memo..."):
-        memo = ai_memo(r, test_name)
-    if memo is None:
-        st.caption("AI memo unavailable (no API key, an error, or it didn't state the decision "
-                   "correctly), so showing the standard memo.")
-memo = memo or template_memo(r, test_name)
-st.markdown(memo)
-st.download_button("Download memo", memo, file_name="decision_memo.md")
 
 with st.expander("Preview the data"):
     st.dataframe(df.head(50), hide_index=True)
