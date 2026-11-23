@@ -1,6 +1,6 @@
 # ShipCheck
 
-**Should we ship this A/B test?** ShipCheck checks whether an experiment's results can be trusted, then makes a ship / don't ship / keep running call and explains why.
+**Should we ship this A/B test?** ShipCheck checks whether an experiment's results can be trusted, then makes a ship / don't ship / keep running call and writes a decision memo for stakeholders.
 
 ## The problem
 
